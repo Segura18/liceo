@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cartelera Informativa | U.E. Liceo Bolivariano Pedro Lucas Urribarri</title>
+    <title>Cartelera Informativa | C.N. Educativo Pedro Lucas Urribarri</title>
     <style>
         /* -------------------------------------------------------------
            1. RESET & VARIABLES (Colores modernos e institucionales)
@@ -395,7 +395,7 @@
 <div class="board-container">
     <div class="hero-header">
         <div class="header-info">
-            <h1>U.E. Liceo Bolivariano Pedro Lucas Urribarri</h1>
+            <h1>C.N. Educativo Pedro Lucas Urribarri</h1>
             <p>Cartelera Informativa Digital · Año Escolar 2026</p>
         </div>
         <div class="header-logos">
@@ -404,6 +404,7 @@
         </div>
     </div>
     
+    <!-- Barra de pestañas para navegar por la cartelera -->
     <div class="tabs-bar" id="tabsContainer">
         <button class="tab-btn active" data-tab="reuniones">📢 Reuniones</button>
         <button class="tab-btn" data-tab="horarios">⏰ Horarios</button>
@@ -413,12 +414,15 @@
         <button class="tab-btn" data-tab="festivos">🎉 Días Festivos</button>
     </div>
 
+    <!-- Contenido de cada pestaña -->
     <div class="tabs-content">
+        <!-- Panel: Reuniones -->
         <div class="tab-pane active-pane" id="reunionesPane">
             <div class="section-title">Próximas Reuniones</div>
             <div class="card-grid" id="reunionesGrid"></div>
         </div>
 
+        <!-- Panel: Horarios -->
         <div class="tab-pane" id="horariosPane">
             <div class="section-title">Horarios Escolares</div>
             <div style="display: flex; flex-direction: column; gap: 2rem;">
@@ -431,21 +435,25 @@
             </div>
         </div>
 
+        <!-- Panel: Notas -->
         <div class="tab-pane" id="notasPane">
             <div class="section-title">Calendario de Evaluaciones y Notas</div>
             <div class="card-grid" id="notasGrid"></div>
         </div>
 
+        <!-- Panel: Efemérides -->
         <div class="tab-pane" id="efemeridesPane">
             <div class="section-title">Efemérides del Mes</div>
             <ul class="list-efem" id="efemeridesList"></ul>
         </div>
 
+        <!-- Panel: Actividades -->
         <div class="tab-pane" id="actividadesPane">
             <div class="section-title">Actividades Complementarias</div>
             <div class="card-grid" id="actividadesGrid"></div>
         </div>
 
+        <!-- Panel: Festivos -->
         <div class="tab-pane" id="festivosPane">
             <div class="section-title">Días Festivos / Asuetos</div>
             <div class="card-grid" id="festivosGrid"></div>
@@ -453,21 +461,25 @@
     </div>
 
     <footer>
-        © 2026 U.E. Liceo Bolivariano Pedro Lucas Urribarri · Sistema de Información Académica
+        © 2026 C.N. Educativo Pedro Lucas Urribarri · Sistema de Información Académica
     </footer>
 </div>
 
 <script>
-    // Recuperar colecciones desde LocalStorage sincronizadas con el admin
-    function getCollection(key) {
-        return JSON.parse(localStorage.getItem(`liceo_${key}`)) || [];
+    // ------------------------------------------------------------
+    // Lectura pública desde la API (datos en MySQL)
+    // ------------------------------------------------------------
+    async function apiGet(entity) {
+        const res = await fetch(`api.php?entity=${entity}&action=list`);
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.message || 'Error de lectura');
+        return json.data;
     }
 
     // Funciones de renderizado optimizadas
-    function renderReuniones() {
+    function renderReuniones(data) {
         const container = document.getElementById("reunionesGrid");
         if(!container) return;
-        const data = getCollection('reuniones');
         
         if (data.length === 0) {
             container.innerHTML = '<p class="empty-message">No hay reuniones programadas.</p>';
@@ -487,10 +499,9 @@
         `).join('');
     }
 
-    function renderHorarios() {
+    function renderHorarios(data) {
         const maestrosTable = document.getElementById("horarioMaestrosTable");
         if(!maestrosTable) return;
-        const data = getCollection('horarios');
 
         if (data.length === 0) {
             maestrosTable.innerHTML = '<tr><td class="empty-message">No hay horarios registrados.</td></tr>';
@@ -503,10 +514,9 @@
         `;
     }
 
-    function renderNotas() {
+    function renderNotas(data) {
         const container = document.getElementById("notasGrid");
         if(!container) return;
-        const data = getCollection('notas');
 
         if (data.length === 0) {
             container.innerHTML = '<p class="empty-message">No hay cronogramas de entrega de notas publicados.</p>';
@@ -524,10 +534,9 @@
         `).join('');
     }
 
-    function renderEfemerides() {
+    function renderEfemerides(data) {
         const lista = document.getElementById("efemeridesList");
         if(!lista) return;
-        const data = getCollection('efemerides');
 
         if (data.length === 0) {
             lista.innerHTML = '<li class="empty-message">No hay efemérides registradas para este mes.</li>';
@@ -542,10 +551,9 @@
         `).join('');
     }
 
-    function renderActividades() {
+    function renderActividades(data) {
         const container = document.getElementById("actividadesGrid");
         if(!container) return;
-        const data = getCollection('actividades');
 
         if (data.length === 0) {
             container.innerHTML = '<p class="empty-message">No hay actividades complementarias programadas.</p>';
@@ -558,15 +566,14 @@
                 <div class="card-meta-wrapper">
                     <div class="card-date">📅 ${act.fecha}</div>
                 </div>
-                <div class="card-desc">${act.desc.replace(/\n/g, '<br>')}</div>
+                <div class="card-desc">${act.descripcion.replace(/\n/g, '<br>')}</div>
             </div>
         `).join('');
     }
 
-    function renderFestivos() {
+    function renderFestivos(data) {
         const container = document.getElementById("festivosGrid");
         if(!container) return;
-        const data = getCollection('festivos');
 
         if (data.length === 0) {
             container.innerHTML = '<p class="empty-message">No hay días festivos registrados.</p>';
@@ -607,27 +614,36 @@
         });
     }
 
-    // Escuchar cambios en otras pestañas (si se edita en el admin en paralelo)
-    window.addEventListener('storage', () => {
-        renderAll();
-    });
+    // Cargar todos los módulos desde el backend
+    async function renderAll() {
+        try {
+            const [reuniones, horarios, notas, efemerides, actividades, festivos] = await Promise.all([
+                apiGet('reuniones'),
+                apiGet('horarios'),
+                apiGet('notas'),
+                apiGet('efemerides'),
+                apiGet('actividades'),
+                apiGet('festivos')
+            ]);
 
-    function renderAll() {
-        renderReuniones();
-        renderHorarios();
-        renderNotas();
-        renderEfemerides();
-        renderActividades();
-        renderFestivos();
+            renderReuniones(reuniones);
+            renderHorarios(horarios);
+            renderNotas(notas);
+            renderEfemerides(efemerides);
+            renderActividades(actividades);
+            renderFestivos(festivos);
+        } catch (err) {
+            console.error(err);
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        renderAll();
+    document.addEventListener('DOMContentLoaded', async () => {
+        await renderAll();
         initTabs();
     });
 </script>
 
-<a href="login.html" target="_blank" class="btn-floating-admin" title="Acceder al Panel de Control">
+<a href="login.php" target="_blank" class="btn-floating-admin" title="Acceder al Panel de Control">
     ⚙️ <span>Panel de Administrador</span>
 </a>
 </body>
